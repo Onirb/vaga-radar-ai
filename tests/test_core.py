@@ -129,6 +129,8 @@ def test_site_esconde_fontes_pedidas(tmp_path):
     (docs / "jobs.json").write_text(json.dumps({"updated": "2026-01-01T00:00:00+00:00", "jobs": jobs}))
     html = render_site(docs / "jobs.json", frozenset({"linkedin"})).read_text(encoding="utf-8")
     assert "Dev A" in html and "Dev B" not in html
+    assert "Mapa de proximidade" in html
+    assert "function related(a, b)" in html
 
 
 def test_linkedin_exige_prova_de_remoto():

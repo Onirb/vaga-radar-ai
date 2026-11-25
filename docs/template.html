@@ -16,6 +16,8 @@
   .sub { color:var(--muted); margin:0 0 14px; font-size:13px; }
   .bar { display:flex; flex-wrap:wrap; gap:8px; position:sticky; top:0; background:var(--bg); padding:8px 0; z-index:1; }
   input, select { padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); font:inherit; }
+  button { padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--text); font:inherit; cursor:pointer; }
+  button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#fff; }
   input { flex:1 1 220px; }
   .job { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin:8px 0; }
   .job a { color:var(--accent); font-weight:600; text-decoration:none; }
@@ -25,6 +27,17 @@
   .new { color:#1a7f37; font-weight:600; }
   .tag.here { border-color:var(--accent); color:var(--accent); }
   .empty { color:var(--muted); text-align:center; padding:40px 0; }
+  .view { margin-top:10px; }
+  .graph-note { color:var(--muted); font-size:13px; margin:0 0 8px; }
+  #graph { display:block; width:100%; height:620px; border:1px solid var(--line); border-radius:10px; background:var(--card); }
+  .graph-edge { stroke:var(--line); stroke-opacity:.55; }
+  .graph-node { cursor:pointer; stroke:var(--card); stroke-width:2; }
+  .graph-node.selected { stroke:var(--text); stroke-width:3; }
+  .graph-label { fill:var(--muted); font-size:11px; pointer-events:none; }
+  .selected-job { min-height:22px; margin:8px 0 0; color:var(--muted); font-size:13px; }
+  .selected-job a { color:var(--accent); font-weight:600; text-decoration:none; }
+  .legend { display:flex; flex-wrap:wrap; gap:8px; color:var(--muted); font-size:12px; margin:8px 0; }
+  .legend span::before { content:""; display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; background:var(--c); }
   footer { color:var(--muted); font-size:12px; margin:24px 0; }
 </style>
 </head>
@@ -43,7 +56,17 @@
       <option value="intl">Remoto internacional</option>
     </select>
   </div>
-  <div id="list"></div>
+  <div class="bar" aria-label="Modo de visualização">
+    <button id="list-view" type="button" aria-pressed="true">Lista</button>
+    <button id="graph-view" type="button" aria-pressed="false">Mapa de proximidade</button>
+  </div>
+  <section class="view" id="list-panel"><div id="list"></div></section>
+  <section class="view" id="graph-panel" hidden>
+    <p class="graph-note">Cada ponto é uma vaga. Linhas indicam empresa em comum ou área técnica em comum no título e nas tags. Selecione um ponto para abrir a vaga.</p>
+    <div class="legend" id="legend" aria-label="Legenda do mapa"></div>
+    <svg id="graph" role="img" aria-label="Mapa de proximidade entre vagas"></svg>
+    <p class="selected-job" id="selected-job" aria-live="polite"></p>
+  </section>
   <footer>
     Fontes: LinkedIn, Gupy, Programathor, Vagas.com.br, repositórios de vagas no GitHub (frontendbr, backend-br e outros),
     <a href="https://remoteok.com">Remote OK</a>, <a href="https://weworkremotely.com">We Work Remotely</a> e
@@ -55,6 +78,16 @@ const DATA = /*JOBS_JSON*/;
 const jobs = DATA.jobs;
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const TOPICS = [
+  ["IA e LLMs", /\b(ai|ia|llm|genai|generative|agentic|agent|rag|intelligence)\b/i, "#8250df"],
+  ["Machine learning", /\b(machine learning|mlops|ml engineer|deep learning|model)\b/i, "#0969da"],
+  ["Ciência de dados", /\b(data scientist|data science|cientista de dados|analytics)\b/i, "#1a7f37"],
+  ["Engenharia de dados", /\b(data engineer|engenheir[oa] de dados|data platform|dataops)\b/i, "#bf8700"],
+  ["NLP e visão", /\b(nlp|natural language|computer vision|vis[aã]o computacional)\b/i, "#bc4c00"],
+  ["Plataforma e API", /\b(api|backend|platform|cloud|devops|software)\b/i, "#57606a"],
+];
+let activeView = "list";
+let selectedJob = "";
 
 const sources = [...new Set(jobs.map(j => j.source))].sort();
 for (const s of sources) $("src").insertAdjacentHTML("beforeend", `<option>${esc(s)}</option>`);
@@ -77,12 +110,90 @@ function matchesWhere(j, where) {
   return where === "remoto" || (where === "intl") === !!j.international;
 }
 
-function render() {
+function visibleJobs() {
   const q = $("q").value.trim().toLowerCase(), src = $("src").value, where = $("where").value;
-  const rows = jobs.filter(j =>
+  return jobs.filter(j =>
     (!src || j.source === src) &&
     (!where || matchesWhere(j, where)) &&
     (!q || [j.title, j.company, j.location, j.source, ...(j.tags || [])].join(" ").toLowerCase().includes(q)));
+}
+
+function topicsOf(job) {
+  const text = [job.title, ...(job.tags || [])].join(" ");
+  return TOPICS.filter(([, rx]) => rx.test(text)).map(([name]) => name);
+}
+
+function topicColor(job) {
+  const first = topicsOf(job)[0];
+  return TOPICS.find(([name]) => name === first)?.[2] || "#6e7781";
+}
+
+function related(a, b) {
+  let strength = a.company && b.company && a.company.toLowerCase() === b.company.toLowerCase() ? 3 : 0;
+  const bt = new Set(topicsOf(b));
+  strength += topicsOf(a).filter(topic => bt.has(topic)).length;
+  return strength;
+}
+
+function hash(text) {
+  return [...text].reduce((n, c) => ((n * 31) + c.charCodeAt(0)) >>> 0, 7);
+}
+
+function renderGraph(rows) {
+  const svg = $("graph");
+  const width = Math.max(320, svg.clientWidth || 860), height = 620;
+  const nodes = rows.slice(0, 90).map((job, i) => {
+    const angle = (hash(job.id) % 360) * Math.PI / 180;
+    const radius = 80 + (i % 8) * 28;
+    return {job, x: width / 2 + Math.cos(angle) * radius, y: height / 2 + Math.sin(angle) * radius, vx:0, vy:0};
+  });
+  const edges = [];
+  for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+    const strength = related(nodes[i].job, nodes[j].job);
+    if (strength) edges.push({a:nodes[i], b:nodes[j], strength});
+  }
+  for (let tick = 0; tick < 150; tick++) {
+    for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+      const a = nodes[i], b = nodes[j], dx = b.x - a.x || .1, dy = b.y - a.y || .1, d2 = dx*dx + dy*dy;
+      const force = 900 / d2;
+      a.vx -= force * dx; a.vy -= force * dy; b.vx += force * dx; b.vy += force * dy;
+    }
+    for (const {a,b,strength} of edges) {
+      const dx = b.x - a.x || .1, dy = b.y - a.y || .1, d = Math.hypot(dx,dy) || 1, force = (d - (115 - strength * 12)) * .006;
+      a.vx += force * dx / d; a.vy += force * dy / d; b.vx -= force * dx / d; b.vy -= force * dy / d;
+    }
+    for (const n of nodes) {
+      n.vx *= .72; n.vy *= .72; n.x = Math.max(16, Math.min(width - 16, n.x + n.vx)); n.y = Math.max(16, Math.min(height - 16, n.y + n.vy));
+    }
+  }
+  svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
+  const line = e => `<line class="graph-edge" x1="${e.a.x.toFixed(1)}" y1="${e.a.y.toFixed(1)}" x2="${e.b.x.toFixed(1)}" y2="${e.b.y.toFixed(1)}" stroke-width="${Math.min(2.5, .7 + e.strength * .45)}"/>`;
+  const circle = n => `<circle class="graph-node${n.job.id === selectedJob ? " selected" : ""}" data-job="${esc(n.job.id)}" cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${n.job.id === selectedJob ? 9 : 6}" fill="${topicColor(n.job)}"><title>${esc(n.job.title)} · ${esc(n.job.company || "empresa não informada")}</title></circle>`;
+  svg.innerHTML = edges.map(line).join("") + nodes.map(circle).join("");
+  svg.onclick = event => {
+    const id = event.target.dataset.job;
+    if (!id) return;
+    selectedJob = id;
+    const job = nodes.find(n => n.job.id === id).job;
+    $("selected-job").innerHTML = `<a href="${esc(job.url)}" target="_blank" rel="noopener noreferrer">${esc(job.title)}</a> · ${esc(job.company || "empresa não informada")} · ${topicsOf(job).join(", ") || "sem categoria"}`;
+    renderGraph(rows);
+  };
+  $("legend").innerHTML = TOPICS.map(([name,, color]) => `<span style="--c:${color}">${name}</span>`).join("") + `<span style="--c:#6e7781">Sem categoria</span>`;
+  if (!nodes.length) $("selected-job").textContent = "Nenhuma vaga corresponde aos filtros atuais.";
+  else if (!selectedJob || !nodes.some(n => n.job.id === selectedJob)) $("selected-job").textContent = `${nodes.length} vagas no mapa e ${edges.length} ligações. Selecione um ponto para ver a vaga.`;
+}
+
+function setView(view) {
+  activeView = view;
+  $("list-panel").hidden = view !== "list";
+  $("graph-panel").hidden = view !== "graph";
+  $("list-view").setAttribute("aria-pressed", String(view === "list"));
+  $("graph-view").setAttribute("aria-pressed", String(view === "graph"));
+  if (view === "graph") renderGraph(visibleJobs());
+}
+
+function render() {
+  const rows = visibleJobs();
   $("sub").textContent = `${rows.length} de ${jobs.length} vagas · atualizado em ${new Date(DATA.updated).toLocaleString("pt-BR")}`;
   $("list").innerHTML = rows.length ? rows.slice(0, 300).map(j => {
     const when = ago(j.posted || j.first_seen);
@@ -93,8 +204,12 @@ function render() {
         ${scopeOf(j) === "local" ? '<span class="tag here">na sua cidade</span>' : ""}<span class="tag">${esc(j.source)}</span>${(j.tags || []).slice(0, 4).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
     </div>`;
   }).join("") : `<div class="empty">Nenhuma vaga com esse filtro.</div>`;
+  if (activeView === "graph") renderGraph(rows);
 }
 ["input", "change"].forEach(e => document.querySelector(".bar").addEventListener(e, render));
+$("list-view").addEventListener("click", () => setView("list"));
+$("graph-view").addEventListener("click", () => setView("graph"));
+window.addEventListener("resize", () => { if (activeView === "graph") renderGraph(visibleJobs()); });
 render();
 </script>
 </body>
