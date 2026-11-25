@@ -18,9 +18,8 @@ def job(title, **kw):
 
 
 def test_aceita_areas_pedidas():
-    for t in ["Analista de Infraestrutura Pleno", "Engenheiro DevOps", "Analista de Redes Sr",
-              "Analista de Segurança da Informação", "Desenvolvedor Backend Python", "Analista de SOC III",
-              "Cloud Security Engineer", "Pentester - Pentest"]:
+    for t in ["Cientista de Dados Sênior", "Data Engineer", "Machine Learning Engineer",
+              "Senior AI Engineer", "GenAI Engineer", "MLOps Engineer", "Analytics Engineer"]:
         assert FLT.accepts(job(t)), t
 
 
@@ -31,20 +30,20 @@ def test_rejeita_outras_areas():
 
 
 def test_palavra_curta_so_casa_inteira():
-    assert not FLT.accepts(job("Gerente de Vendas Goiás Diversos"))  # "go" dentro de "Goiás"
-    assert FLT.accepts(job("Desenvolvedor Go Sênior"))
+    assert not FLT.accepts(job("Especialista em Vendas Globais"))  # "ai" não deve casar dentro de outra palavra
+    assert FLT.accepts(job("Senior LLM Engineer"))
 
 
 def test_internacional_exige_regiao_compativel():
-    assert FLT.accepts(job("Backend Engineer", international=True, location="Worldwide"))
-    assert FLT.accepts(job("Backend Engineer", international=True, location=""))
-    assert not FLT.accepts(job("Backend Engineer", international=True, location="USA Only"))
+    assert FLT.accepts(job("AI Engineer", international=True, location="Worldwide"))
+    assert FLT.accepts(job("AI Engineer", international=True, location=""))
+    assert not FLT.accepts(job("AI Engineer", international=True, location="USA Only"))
 
 
 def test_vaga_antiga_e_descartada():
     old = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
-    assert not FLT.accepts(job("Desenvolvedor Python", posted=old))
-    assert FLT.accepts(job("Desenvolvedor Python", posted=datetime.now(timezone.utc).isoformat()))
+    assert not FLT.accepts(job("Data Scientist", posted=old))
+    assert FLT.accepts(job("Data Scientist", posted=datetime.now(timezone.utc).isoformat()))
 
 
 def test_url_canonica_ignora_rastreamento():
@@ -133,9 +132,9 @@ def test_site_esconde_fontes_pedidas(tmp_path):
 
 
 def test_linkedin_exige_prova_de_remoto():
-    ok = Job(source="linkedin", title="Dev Python - Trabalho Remoto", url="https://l.com/1", location="Curitiba")
-    presencial = Job(source="linkedin", title="Analista de Redes - BH", url="https://l.com/2", location="Belo Horizonte")
-    gupy = Job(source="gupy", title="Analista de Redes", url="https://g.com/3", location="")
+    ok = Job(source="linkedin", title="AI Engineer - Trabalho Remoto", url="https://l.com/1", location="Curitiba")
+    presencial = Job(source="linkedin", title="Data Scientist - BH", url="https://l.com/2", location="Belo Horizonte")
+    gupy = Job(source="gupy", title="Data Scientist", url="https://g.com/3", location="")
     assert FLT.accepts(ok)
     assert not FLT.accepts(presencial)
     assert FLT.accepts(gupy)  # fontes que já filtram por remoto seguem confiáveis
@@ -167,15 +166,15 @@ def test_parse_geekhunter():
 
 
 def test_vaga_local_vale_em_qualquer_regime():
-    presencial = Job(source="gupy", scope="local", title="Analista de Infraestrutura", url="https://g.com/9",
+    presencial = Job(source="gupy", scope="local", title="Data Analyst", url="https://g.com/9",
                      location="Maringá · presencial")
-    remota_presencial = Job(source="gupy", scope="remoto", title="Analista de Infraestrutura", url="https://g.com/8",
+    remota_presencial = Job(source="gupy", scope="remoto", title="Data Analyst", url="https://g.com/8",
                             location="", international=True)
     assert FLT.accepts(presencial)
     # vaga internacional sem região compatível continua barrada quando o escopo é remoto
     remota_presencial.location = "USA Only"
     assert not FLT.accepts(remota_presencial)
-    linkedin_presencial = Job(source="linkedin", scope="local", title="Analista de Redes", url="https://l.com/5",
+    linkedin_presencial = Job(source="linkedin", scope="local", title="Data Scientist", url="https://l.com/5",
                               location="Maringá, PR")
     assert FLT.accepts(linkedin_presencial)  # sem "remoto" no título, mas é da sua cidade
 
@@ -208,7 +207,7 @@ def test_companies_greenhouse_e_lever_so_aceitam_remoto(monkeypatch):
     from vagas.sources import companies
 
     gh = {"jobs": [
-        {"title": "Linux Support Engineer", "absolute_url": "https://g.io/c/1", "company_name": "Canonical",
+        {"title": "Machine Learning Engineer", "absolute_url": "https://g.io/c/1", "company_name": "Canonical",
          "location": {"name": "Home based - Worldwide"}, "first_published": "2026-09-01T10:00:00-04:00"},
         {"title": "Analista de Infraestrutura", "absolute_url": "https://g.io/c/2", "company_name": "Canonical",
          "location": {"name": "São Paulo, Brazil"}, "first_published": "2026-09-01T10:00:00-04:00"}]}
@@ -217,11 +216,11 @@ def test_companies_greenhouse_e_lever_so_aceitam_remoto(monkeypatch):
              {"text": "SRE Presencial", "hostedUrl": "https://l.co/x/2", "workplaceType": "onsite", "categories": {}}]
     monkeypatch.setattr(companies.http, "get", lambda url, **kw: _Resp(gh if "greenhouse" in url else lever))
     jobs = companies.fetch({"companies": {"greenhouse": ["canonical"], "lever": ["acme"]}})
-    assert [(j.title, j.international) for j in jobs] == [("Linux Support Engineer", True), ("SRE", False)]
+    assert [(j.title, j.international) for j in jobs] == [("Machine Learning Engineer", True), ("SRE", False)]
     assert jobs[0].company == "Canonical" and jobs[1].tags == ["Infra"]
     # a região é decidida pelo filtro geral: worldwide passa, "Home based - EMEA" não
     assert FLT.accepts(jobs[0])
-    assert not FLT.accepts(Job(source="x", title="Linux Engineer", url="https://x/9",
+    assert not FLT.accepts(Job(source="x", title="Machine Learning Engineer", url="https://x/9",
                                location="Home based - EMEA", international=True))
 
 
@@ -287,21 +286,21 @@ def test_parse_empregare():
     assert presencial.posted.startswith("2025-12-30")  # 30/dezembro no futuro = ano passado
 
 
-def test_funcoes_proximas_agora_passam():
-    for t in ["IT Support Engineer", "Analista de Suporte Técnico Pleno", "Systems Administrator", "Help Desk N2",
-              "Analista de Sistemas", "Engenheiro de Dados", "Analista de QA", "Técnico em Telecom"]:
+def test_funcoes_de_dados_e_ia_passam():
+    for t in ["Engenheiro de Dados", "Data Engineer", "Machine Learning Engineer", "AI Engineer",
+              "Analista de Dados", "Analytics Engineer", "MLOps Engineer", "Computer Vision Engineer"]:
         assert FLT.accepts(job(t)), t
     for t in ["Engenheiro de Produção", "Contest Manager", "Analista de Vendas TI"]:
         assert not FLT.accepts(job(t)), t
 
 
 def test_needs_proof_e_assume_remote():
-    sem_prova = Job(source="linkedin", title="Analista de Redes Pleno", url="https://l.com/7", location="Curitiba")
+    sem_prova = Job(source="linkedin", title="Data Scientist Pleno", url="https://l.com/7", location="Curitiba")
     assert FLT.needs_proof(sem_prova) and not FLT.accepts(sem_prova)
     assert FLT.accepts(sem_prova, assume_remote=True)  # descrição confirmou o remoto
-    com_prova = Job(source="linkedin", title="Analista de Redes - Remoto", url="https://l.com/8", location="Brasil")
+    com_prova = Job(source="linkedin", title="Data Scientist - Remoto", url="https://l.com/8", location="Brasil")
     assert not FLT.needs_proof(com_prova) and FLT.accepts(com_prova)
-    assert not FLT.needs_proof(Job(source="gupy", title="Analista de Redes", url="https://g.com/4"))
+    assert not FLT.needs_proof(Job(source="gupy", title="Data Scientist", url="https://g.com/4"))
 
 
 def test_verificacao_le_a_descricao():
@@ -354,17 +353,17 @@ def test_parse_zohorecruit():
     from vagas.sources import zohorecruit
 
     data = [
-        {"Remote_Job": True, "Posting_Title": "Profissional Red Team ", "City": None, "id": "111", "Date_Opened": "2026-06-21", "Publish": True},
+        {"Remote_Job": True, "Posting_Title": "Machine Learning Engineer ", "City": None, "id": "111", "Date_Opened": "2026-06-21", "Publish": True},
         {"Remote_Job": False, "Posting_Title": "Analista de Redes", "City": "Maringá", "id": "222", "Date_Opened": "2026-09-01", "Publish": True},
         {"Remote_Job": False, "Posting_Title": "Analista de Redes", "City": "Vitória", "id": "333", "Date_Opened": "2026-09-01", "Publish": True},
         {"Remote_Job": True, "Posting_Title": "Rascunho", "City": None, "id": "444", "Publish": False},
     ]
     page = '<input type="hidden" value="' + _html.escape(_json.dumps(data), quote=True).replace("&quot;", "&#34;") + '">'
     remoto, aqui = zohorecruit.parse(page, "spassu", {"maringa"})
-    assert (remoto.scope, remoto.location, remoto.title) == ("remoto", "Remoto", "Profissional Red Team")
-    assert remoto.url == "https://spassu.zohorecruit.com/jobs/Careers/111/Profissional-Red-Team"
+    assert (remoto.scope, remoto.location, remoto.title) == ("remoto", "Remoto", "Machine Learning Engineer")
+    assert remoto.url == "https://spassu.zohorecruit.com/jobs/Careers/111/Machine-Learning-Engineer"
     assert remoto.posted == "" and remoto.tags == ["aberta em 2026-06-21"]  # sem data de publicação: não é cortada por idade
-    assert FLT.accepts(remoto)  # vaga aberta há meses ainda passa (Red Team)
+    assert FLT.accepts(remoto)  # vaga aberta há meses ainda passa quando a data de publicação não é informada
     assert (aqui.scope, aqui.location) == ("local", "Maringá")
     assert zohorecruit.parse(page, "spassu", set()) == [remoto]  # sem cidade configurada: só as remotas
     assert zohorecruit.parse("<html></html>", "spassu") == []
