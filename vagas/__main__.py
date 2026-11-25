@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import http, verify
+from .applications import match_applications, read_applications
 from .filters import JobFilter
 from .notify import format_digest, send_telegram
 from .site import render_site
@@ -109,7 +110,10 @@ def main(argv: list[str] | None = None) -> int:
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     store.source_runs.update({n: now for n in due})
     store.save()
-    page = render_site(store.path, frozenset(filter(None, args.hide_sources.split(","))))
+    applications = match_applications(list(store.jobs.values()), read_applications(cfg))
+    if cfg.get("applications", {}).get("enabled", False):
+        log.info("%d candidatura(s) marcada(s) a partir da planilha", len(applications))
+    page = render_site(store.path, frozenset(filter(None, args.hide_sources.split(","))), applications)
     log.info("página gerada: %s", page)
     if new and not args.no_notify:
         send_telegram(format_digest(new, max_items))

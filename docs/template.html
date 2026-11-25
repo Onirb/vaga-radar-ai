@@ -26,6 +26,7 @@
   .tag { display:inline-block; border:1px solid var(--line); border-radius:99px; padding:0 8px; font-size:12px; margin-right:4px; }
   .new { color:#1a7f37; font-weight:600; }
   .tag.here { border-color:var(--accent); color:var(--accent); }
+  .tag.applied { border-color:#1a7f37; color:#1a7f37; font-weight:600; }
   .empty { color:var(--muted); text-align:center; padding:40px 0; }
   .view { margin-top:10px; }
   .graph-note { color:var(--muted); font-size:13px; margin:0 0 8px; }
@@ -55,6 +56,7 @@
       <option value="br">Remoto Brasil</option>
       <option value="intl">Remoto internacional</option>
     </select>
+    <select id="application"><option value="">Todas as candidaturas</option><option value="applied">Já candidatei</option><option value="open">Ainda não candidatei</option></select>
   </div>
   <div class="bar" aria-label="Modo de visualização">
     <button id="list-view" type="button" aria-pressed="true">Lista</button>
@@ -76,6 +78,7 @@
 <script>
 const DATA = /*JOBS_JSON*/;
 const jobs = DATA.jobs;
+const applications = DATA.applications || {};
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const TOPICS = [
@@ -111,10 +114,11 @@ function matchesWhere(j, where) {
 }
 
 function visibleJobs() {
-  const q = $("q").value.trim().toLowerCase(), src = $("src").value, where = $("where").value;
+  const q = $("q").value.trim().toLowerCase(), src = $("src").value, where = $("where").value, application = $("application").value;
   return jobs.filter(j =>
     (!src || j.source === src) &&
     (!where || matchesWhere(j, where)) &&
+    (!application || (application === "applied") === !!applications[j.id]) &&
     (!q || [j.title, j.company, j.location, j.source, ...(j.tags || [])].join(" ").toLowerCase().includes(q)));
 }
 
@@ -198,10 +202,12 @@ function render() {
   $("list").innerHTML = rows.length ? rows.slice(0, 300).map(j => {
     const when = ago(j.posted || j.first_seen);
     const fresh = (Date.now() - new Date(j.posted || j.first_seen)) < 864e5 * 2;
+    const application = applications[j.id];
+    const applied = application ? `<span class="tag applied">candidatura: ${esc(application.status || "registrada")}${application.stage ? ` · ${esc(application.stage)}` : ""}</span>` : "";
     return `<div class="job">
       <a href="${esc(j.url)}" target="_blank" rel="noopener noreferrer">${esc(j.title)}</a>
       <div class="meta">${[esc(j.company), esc(j.location), fresh ? `<span class="new">${when}</span>` : when, j.salary && esc(j.salary)].filter(Boolean).join(" · ")}
-        ${scopeOf(j) === "local" ? '<span class="tag here">na sua cidade</span>' : ""}<span class="tag">${esc(j.source)}</span>${(j.tags || []).slice(0, 4).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
+        ${scopeOf(j) === "local" ? '<span class="tag here">na sua cidade</span>' : ""}${applied}<span class="tag">${esc(j.source)}</span>${(j.tags || []).slice(0, 4).map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div>
     </div>`;
   }).join("") : `<div class="empty">Nenhuma vaga com esse filtro.</div>`;
   if (activeView === "graph") renderGraph(rows);

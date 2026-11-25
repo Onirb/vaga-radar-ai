@@ -7,7 +7,7 @@ from pathlib import Path
 TEMPLATE = Path(__file__).resolve().parent.parent / "docs" / "template.html"
 
 
-def render_site(jobs_json: Path, hide_sources: frozenset[str] = frozenset()) -> Path:
+def render_site(jobs_json: Path, hide_sources: frozenset[str] = frozenset(), applications: dict | None = None) -> Path:
     """Gera docs/index.html com os dados embutidos (funciona abrindo o arquivo direto no navegador).
 
     `hide_sources` tira fontes só da página (ex.: para um site público), sem apagá-las do JSON.
@@ -15,6 +15,7 @@ def render_site(jobs_json: Path, hide_sources: frozenset[str] = frozenset()) -> 
     template = TEMPLATE.read_text(encoding="utf-8")
     data = json.loads(jobs_json.read_text(encoding="utf-8"))
     data["jobs"] = [j for j in data["jobs"] if j["source"].split(":")[0] not in hide_sources]
+    data["applications"] = applications or {}
     # "</" dentro de <script> poderia fechar a tag antes da hora
     payload = json.dumps(data, ensure_ascii=False).replace("</", "<\\/")
     out = jobs_json.parent / "index.html"

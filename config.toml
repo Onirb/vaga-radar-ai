@@ -131,3 +131,11 @@ max_items = 60
 path = "docs/jobs.json"
 keep_days = 45
 # min_hours = 6   # descomente para pular a coleta se a última foi há menos de 6 h (evita HTTP 429)
+
+[applications]
+# Integração opcional de leitura com uma aba do Google Sheets. A aba deve estar publicada na web
+# ou acessível sem login para que o seu computador possa ler o CSV; não use dados sensíveis nela.
+enabled = false
+# spreadsheet_url = "https://docs.google.com/spreadsheets/d/SEU_ID/edit"
+# sheet = "Candidaturas 2026"
+# Ou use uma URL CSV direta: csv_url = "https://.../export?format=csv"

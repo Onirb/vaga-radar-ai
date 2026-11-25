@@ -133,6 +133,17 @@ def test_site_esconde_fontes_pedidas(tmp_path):
     assert "function related(a, b)" in html
 
 
+def test_planilha_de_candidaturas_marca_por_titulo_e_empresa(monkeypatch):
+    from vagas import applications
+
+    csv_text = "Cargo,Empresa,Status,Etapa seletivo\nAI Engineer Senior,CI&T,Em aberto,Inscrição\n"
+    monkeypatch.setattr(applications.http, "get", lambda url, **kw: type("R", (), {"text": csv_text})())
+    cfg = {"applications": {"enabled": True, "csv_url": "https://example.com/jobs.csv"}}
+    (application,) = applications.read_applications(cfg)
+    job = Job(source="x", title="AI Engineer Senior, Brazil", company="CI&T", url="https://example.com/job")
+    assert applications.match_applications([job], [application])[job.id]["status"] == "Em aberto"
+
+
 def test_linkedin_exige_prova_de_remoto():
     ok = Job(source="linkedin", title="AI Engineer - Trabalho Remoto", url="https://l.com/1", location="Curitiba")
     presencial = Job(source="linkedin", title="Data Scientist - BH", url="https://l.com/2", location="Belo Horizonte")

@@ -93,6 +93,18 @@ O que o projeto já faz para não ser bloqueado:
 Abra `docs/index.html` no navegador para ver e filtrar as vagas. Os dados coletados ficam só na sua máquina
 (`docs/jobs.json` e `docs/index.html` estão no `.gitignore`).
 
+### Marcar candidaturas a partir do Google Sheets (opcional)
+
+O Radar pode ler uma aba de acompanhamento e marcar no painel as vagas às quais você já se candidatou. Habilite a seção
+`[applications]` de `config.toml`, informe a URL da planilha e o nome da aba. Ela deve ter `Cargo` e `Empresa`; `Status`,
+`Etapa seletivo`, `Data candidatura` e `Link da vaga` são opcionais. A comparação prioriza o link e, se a planilha não o
+exportar, usa título + empresa.
+
+A integração é **somente leitura** e não usa token nem envia dados. Para o script local ler a aba, publique somente essa
+aba via *Arquivo → Compartilhar → Publicar na Web* (CSV) ou informe `csv_url`; não publique pretensão salarial, feedback,
+documentos ou outro dado pessoal. Depois rode `python -m vagas`: o painel ganha o filtro **“Já candidatei”** e uma etiqueta
+com status e etapa.
+
 ## Escolher a área
 
 Tudo fica em [config.toml](config.toml):
