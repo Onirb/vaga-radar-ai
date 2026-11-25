@@ -1,17 +1,21 @@
-# 📡 Vaga Radar
+# 📡 Vaga Radar AI Brasil
 
-[![Testes](https://github.com/mmaxjr/vaga-radar/actions/workflows/tests.yml/badge.svg)](https://github.com/mmaxjr/vaga-radar/actions/workflows/tests.yml)
+[![Testes](https://github.com/Onirb/vaga-radar-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/Onirb/vaga-radar-ai/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-green)
 
-Agregador de vagas **remotas** de TI. Coleta de vários sites brasileiros e internacionais, filtra por área,
-remove duplicadas, guarda em JSON, gera uma página com busca e manda um resumo das vagas novas no Telegram.
+Agregador de vagas **remotas** voltado a profissionais de dados e IA no Brasil. Coleta fontes brasileiras e
+internacionais, filtra cargos de Data Science, Engenharia de Dados, Machine Learning, GenAI, MLOps e Analytics,
+remove duplicadas, guarda o histórico localmente e gera uma página pesquisável.
+
+Este projeto é um fork especializado de [mmaxjr/vaga-radar](https://github.com/mmaxjr/vaga-radar), mantido com a
+licença MIT e a atribuição ao trabalho original.
 
 > *English:* a small, dependency-light Python tool that pulls remote tech jobs from Brazilian and international
 > sources (LinkedIn, Gupy, GitHub job repos, Remote OK...), filters them with regexes you control, de-duplicates,
 > and delivers a daily digest via Telegram plus a searchable static page. Sources are ~40-line plugins: easy to fork.
 
-Por padrão busca **programação, infra, redes, DevOps e segurança**, mas a área é só configuração (veja abaixo).
+Por padrão busca oportunidades em **dados e IA**; os termos e filtros podem ser ajustados em `config.toml`.
 
 ## Fontes
 
@@ -41,8 +45,8 @@ Por padrão busca **programação, infra, redes, DevOps e segurança**, mas a á
 Precisa de Python 3.11+.
 
 ```bash
-git clone https://github.com/mmaxjr/vaga-radar.git
-cd vaga-radar
+git clone https://github.com/Onirb/vaga-radar-ai.git
+cd vaga-radar-ai
 pip install -r requirements.txt
 
 python -m vagas --dry-run              # mostra o que há de novo, sem salvar nem enviar
@@ -106,6 +110,9 @@ No máximo 2 vagas por empresa; o resto vira uma linha ("Canonical: 84 outras...
 outra em inglês (`--idioma pt|en|todos`); `--desde <instante ISO>` limita às vagas vistas pela primeira vez depois dele e `--hoje`
 só às de hoje. Veja o formato do `perfil.toml` no topo de
 [vagas/profile.py](vagas/profile.py). O perfil é um arquivo local: não o publique.
+
+Para começar, copie `perfil.example.toml` para `perfil.toml`, revise cada habilidade e use apenas experiências que você
+consiga demonstrar em currículo, GitHub ou entrevista.
 
 ## Vagas na sua cidade
 

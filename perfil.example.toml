@@ -1,0 +1,31 @@
+# Modelo local para ranquear vagas. Copie para `perfil.toml` e complete com evidências reais.
+# `perfil.toml` é ignorado pelo Git e não deve conter dados pessoais desnecessários.
+
+[perfil]
+ingles = "intermediário"
+referencia = 30
+
+[habilidades]
+python = 5
+"machine learning" = 4
+sql = 4
+"data analysis" = 3
+docker = 2
+
+[lacunas]
+termos = ["kubernetes"]
+
+[interesses]
+"data scientist" = 5
+"machine learning" = 5
+"data engineer" = 4
+"ai engineer" = 4
+
+[evitar]
+termos = ["junior", "estágio", "internship", "suporte técnico"]
+
+[curriculos]
+padrao = "Curriculo-PT"
+padrao_en = "Resume-EN"
+"data scientist|analytics" = "Resume-Data-Scientist"
+"machine learning|ai engineer|genai|llm" = "Resume-AI-Engineer"

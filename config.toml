@@ -1,49 +1,32 @@
-# Configuração do agregador. Edite à vontade.
-# Só entram vagas REMOTAS (as fontes já filtram por isso). Para mudar de área, troque os termos abaixo.
+# Configuração do Vaga Radar AI.
+# Só entram vagas REMOTAS. O foco deste fork é dados, IA/ML, GenAI, MLOps e engenharia de dados.
 
 [search]
 # Termos usados nas buscas das fontes que têm busca (Gupy, LinkedIn, Vagas.com.br)
 terms = [
-  "desenvolvedor", "programador", "engenheiro de software", "developer", "backend", "frontend", "full stack",
-  "devops", "sre", "infraestrutura", "analista de infraestrutura", "sysadmin", "cloud",
-  "redes", "network engineer",
-  "segurança da informação", "cybersecurity", "pentest",
+  "cientista de dados", "data scientist", "engenheiro de dados", "data engineer",
+  "machine learning", "engenheiro de machine learning", "machine learning engineer",
+  "inteligência artificial", "artificial intelligence", "ai engineer", "engenheiro de ia",
+  "generative ai", "genai", "llm", "nlp", "computer vision", "mlops", "analytics",
 ]
 
 # A vaga só passa se o título contiver ao menos uma destas (regex, sem diferenciar maiúsculas).
 # Palavras curtas usam (?<![a-z])...(?![a-z]) para casar só a palavra inteira.
 include = [
-  # programação
-  'desenvolv', 'programador', 'developer', 'software', 'back-?end', 'front-?end', 'full-?stack',
-  '(?<![a-z])dev(?![a-z])', 'python', 'javascript', 'typescript', 'node', 'react', 'angular', 'vue',
-  '(?<![a-z])java(?![a-z])', '(?<![a-z])go(?![a-z])', 'golang', 'php', 'ruby', '[.]net', 'c#', 'mobile', 'android', 'flutter',
-  'engenheiro de dados', 'data engineer', 'machine learning', 'automação',
-  '(?<![a-z])(ti|it)(?![a-z])', 'inform[aá]tica',
-  # funções próximas (suporte, sistemas, dados, testes, implantação)
-  'suporte t[eé]cnico', 'technical support', 'it support', 'help ?desk', 'service ?desk', 'support engineer',
-  'analista de sistemas', 'administrador', 'administrator', 'implanta', 'implementa', 'integra[cç]', '(?<![a-z])qa(?![a-z])',
-  '(?<![a-z])(testes?|testing|tester)(?![a-z])', 'dados', '(?<![a-z])data(?![a-z])', '(?<![a-z])rpa(?![a-z])', 'voip', 'telecom', 'engenheiro de',
-  # infra / devops / cloud
-  'infra', 'devops', 'devsecops', '(?<![a-z])sre(?![a-z])', 'sysadmin', 'sistemas', 'linux', 'kubernetes', 'docker',
-  'cloud', '(?<![a-z])aws(?![a-z])', 'azure', 'gcp', 'terraform', 'observabilidade', 'plataforma', 'platform',
-  # redes
-  'network', 'redes', 'cisco', 'firewall', 'wireless', 'telecom', '(?<![a-z])noc(?![a-z])',
-  # segurança
-  'seguran[cç]a da informa', 'seguran[cç]a cibern', 'cyber', 'ciberseguran', 'infosec', 'appsec', 'secops',
-  '(?<![a-z])soc(?![a-z])', 'pentest', 'security', 'threat', 'siem', 'vulnerab', '(?<![a-z])iam(?![a-z])',
-  'seguran[cç]a de (aplica|dados|redes|sistemas|infra)', 'red team', 'blue team', 'purple team', 'gest[aã]o de riscos', '(?<![a-z])risk', 'compliance', 'governan', 'privacidade', 'lgpd',
-  '(?<![a-z])grc(?![a-z])', '(?<![a-z])s[.]i(?![a-z])',
-  # bancos de dados
-  '(?<![a-z])dba(?![a-z])', 'banco de dados', 'database', 'postgres',
+  'cientista de dados', 'data scientist', 'engenheir[oa] de dados', 'data engineer',
+  'machine learning', 'ml engineer', 'engenheir[oa] de (machine learning|ia|ai)',
+  'ai engineer', 'artificial intelligence', 'intelig[eê]ncia artificial',
+  'generative ai', 'genai', '(?<![a-z])llm(?![a-z])', '(?<![a-z])nlp(?![a-z])',
+  'computer vision', 'vis[aã]o computacional', 'deep learning', 'mlops',
+  'analytics engineer', 'analista de dados', 'data analyst', 'bi engineer',
+  'data platform', 'dataops', 'data architect', 'arquiteto de dados',
 ]
 
 # Descarta a vaga se o título contiver alguma destas
 exclude = [
   'vendas', 'comercial', 'estagi', '(?<![a-z])intern(?![a-z])', 'recrutador', 'marketing',
-  # "engenheiro/segurança" de outras áreas
   'civil', 'mec[aâ]nic', 'el[eé]trica', 'el[eé]trico', 'qu[ií]mic', 'mechanical', 'electrical',
-  'seguran[cç]a do trabalho', 'seguran[cç]a patrimonial', 'vigilante', 'porteiro',
-  'engenheiro de produ', 'engenheiro agr', 'engenheiro florestal', 'engenheiro de alimentos', 'engenheiro de petr',
+  'seguran[cç]a do trabalho', 'engenheiro de produ', 'engenheiro agr', 'engenheiro florestal',
 ]
 
 # Fontes que não confirmam o regime da vaga (o filtro "remoto" do LinkedIn falha bastante):
@@ -112,10 +95,10 @@ sites = ["spassu"]
 
 [jobicy]
 geos = ["brazil", "anywhere"]
-tags = ["devops", "sre", "infrastructure", "security", "network", "linux"]
+tags = ["data", "data-science", "machine-learning", "artificial-intelligence", "python", "mlops"]
 
 [himalayas]
-queries = ["devops", "sre", "infrastructure", "security", "network engineer", "linux"]
+queries = ["data scientist", "data engineer", "machine learning", "ai engineer", "mlops", "analytics engineer"]
 
 [geekhunter]
 pages_per_term = 2
