@@ -1,5 +1,28 @@
 # 📡 Vaga Radar AI Brasil
 
+## Portfolio overview
+
+A specialized MIT-licensed fork for discovering remote data and AI opportunities relevant to Brazil. It turns permitted public sources into a configurable, local-first workflow with filtering, de-duplication, history and optional delivery channels.
+
+| Focus | Evidence |
+| --- | --- |
+| Audience | Remote roles in data, AI, machine learning, MLOps and analytics |
+| Workflow | Source plugins, configurable filters, de-duplication, local history and static search page |
+| Responsible collection | Per-source intervals, rate-limit handling and explicit exclusions where terms or robots rules require them |
+| Attribution | Specialized fork of [mmaxjr/vaga-radar](https://github.com/mmaxjr/vaga-radar), retained under MIT |
+
+```mermaid
+flowchart LR
+  A[Permitted public sources] --> B[Collection with source limits]
+  B --> C[Role, remote and region filters]
+  C --> D[De-duplication and local history]
+  D --> E[Searchable local page]
+  D --> F[Optional Telegram digest]
+```
+
+**Scope:** collected job history remains local by default; always confirm details and apply through the original posting.
+
+
 [![Testes](https://github.com/Onirb/vaga-radar-ai/actions/workflows/tests.yml/badge.svg)](https://github.com/Onirb/vaga-radar-ai/actions/workflows/tests.yml)
 ![Python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-green)
